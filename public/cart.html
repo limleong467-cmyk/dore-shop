@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>购物车 - Dore Shop</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .cart-container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .cart-title {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .cart-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .cart-items {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-emoji {
+            font-size: 60px;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .item-price {
+            font-size: 16px;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .item-quantity {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .quantity-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .btn-remove {
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-remove:hover {
+            background: #fecaca;
+        }
+
+        .cart-summary {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .summary-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .summary-item.total {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+            border-bottom: none;
+            margin-bottom: 20px;
+        }
+
+        .btn-checkout {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .btn-checkout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-continue {
+            width: 100%;
+            padding: 12px;
+            background: #f5f5f5;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-continue:hover {
+            background: #e0e0e0;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .empty-text {
+            font-size: 18px;
+            color: #999;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .cart-content {
+                grid-template-columns: 1fr;
+            }
+
+            .cart-summary {
+                position: static;
+            }
+
+            .cart-item {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>🛍️ Dore Shop</h1>
+            <p>学生创意商品小店</p>
+        </div>
+    </header>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-item">🏠 首页</a>
+            <a href="login.html" class="nav-item">👤 登录</a>
+            <a href="cart.html" class="nav-item">🛒 购物车</a>
+        </div>
+    </nav>
+
+    <div class="cart-container">
+        <h2 class="cart-title">🛒 购物车</h2>
+
+        <div class="cart-content">
+            <!-- 购物车物品列表 -->
+            <div class="cart-items" id="cartItems">
+                <div class="empty-cart">
+                    <div class="empty-icon">📭</div>
+                    <div class="empty-text">购物车是空的</div>
+                    <a href="index.html" class="btn-continue">← 继续购物</a>
+                </div>
+            </div>
+
+            <!-- 购物车总结 -->
+            <div class="cart-summary">
+                <div class="summary-title">订单总结</div>
+
+                <div class="summary-item">
+                    <span>商品数量</span>
+                    <span id="totalQuantity">0</span>
+                </div>
+
+                <div class="summary-item">
+                    <span>小计</span>
+                    <span id="subtotal">¥0.00</span>
+                </div>
+
+                <div class="summary-item">
+                    <span>运费</span>
+                    <span>免费</span>
+                </div>
+
+                <div class="summary-item total">
+                    <span>总计</span>
+                    <span id="totalPrice">¥0.00</span>
+                </div>
+
+                <button class="btn-checkout" onclick="checkout()">去结账</button>
+                <a href="index.html" class="btn-continue">继续购物</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载
+        window.addEventListener('DOMContentLoaded', () => {
+            displayCart();
+            updateLoginStatus();
+        });
+
+        function displayCart() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const cartItemsDiv = document.getElementById('cartItems');
+
+            if (cart.length === 0) {
+                cartItemsDiv.innerHTML = `
+                    <div class="empty-cart">
+                        <div class="empty-icon">📭</div>
+                        <div class="empty-text">购物车是空的</div>
+                        <a href="index.html" class="btn-continue">← 继续购物</a>
+                    </div>
+                `;
+                updateSummary([], cart);
+                return;
+            }
+
+            const itemsHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div class="item-emoji">${item.emoji}</div>
+                    <div class="item-info">
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-price">¥${item.price}</div>
+                        <div class="item-quantity">
+                            <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">−</button>
+                            <span>${item.quantity}</span>
+                            <button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
+                        </div>
+                    </div>
+                    <button class="btn-remove" onclick="removeFromCart(${item.id})">删除</button>
+                </div>
+            `).join('');
+
+            cartItemsDiv.innerHTML = itemsHTML;
+            updateSummary(cart, cart);
+        }
+
+        function updateQuantity(productId, change) {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const item = cart.find(i => i.id === productId);
+
+            if (item) {
+                item.quantity += change;
+                if (item.quantity < 1) {
+                    item.quantity = 1;
+                }
+                localStorage.setItem('cart', JSON.stringify(cart));
+                displayCart();
+            }
+        }
+
+        function removeFromCart(productId) {
+            if (confirm('确定删除这件商品吗？')) {
+                let cart = JSON.parse(localStorage.getItem('cart')) || [];
+                cart = cart.filter(item => item.id !== productId);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                displayCart();
+            }
+        }
+
+        function updateSummary(cart, allCart) {
+            const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            document.getElementById('totalQuantity').textContent = totalQuantity;
+            document.getElementById('subtotal').textContent = `¥${totalPrice.toFixed(2)}`;
+            document.getElementById('totalPrice').textContent = `¥${totalPrice.toFixed(2)}`;
+        }
+
+        function checkout() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) {
+                alert('请先登录');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            if (cart.length === 0) {
+                alert('购物车是空的');
+                return;
+            }
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            alert(`✅ 订单已提交！\n总金额：¥${total.toFixed(2)}\n\n感谢购物！`);
+            
+            // 清空购物车
+            localStorage.removeItem('cart');
+            displayCart();
+        }
+
+        function updateLoginStatus() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const loginLink = document.querySelector('a[href="login.html"]');
+            
+            if (currentUser && loginLink) {
+                loginLink.textContent = `👤 ${currentUser.username}`;
+                loginLink.href = '#';
+                loginLink.onclick = (e) => {
+                    e.preventDefault();
+                    logout();
+                };
+            }
+        }
+
+        function logout() {
+            if (confirm('确定要登出吗？')) {
+                localStorage.removeItem('currentUser');
+                window.location.reload();
+            }
+        }
+    </script>
+</body>
+</html>

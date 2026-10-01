@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品详情 - Dore Shop</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .product-detail-container {
+            max-width: 1000px;
+            margin: 30px auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 20px;
+        }
+
+        .product-image-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            font-size: 120px;
+        }
+
+        .product-info-section {
+            padding: 20px;
+        }
+
+        .product-name {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .product-price {
+            font-size: 36px;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .product-description {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 30px;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .quantity-control label {
+            font-weight: 600;
+        }
+
+        .quantity-control button {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+
+        .quantity-control button:hover {
+            background: #f5f5f5;
+        }
+
+        .quantity-control input {
+            width: 60px;
+            height: 40px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .btn-add-cart {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+
+        .btn-add-cart:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-back {
+            width: 100%;
+            padding: 15px;
+            background: #f5f5f5;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-back:hover {
+            background: #e0e0e0;
+        }
+
+        @media (max-width: 768px) {
+            .product-detail-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .product-image-section {
+                height: 300px;
+                font-size: 80px;
+            }
+
+            .product-name {
+                font-size: 24px;
+            }
+
+            .product-price {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>🛍️ Dore Shop</h1>
+            <p>学生创意商品小店</p>
+        </div>
+    </header>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="nav-item">🏠 首页</a>
+            <a href="login.html" class="nav-item">👤 登录</a>
+            <a href="cart.html" class="nav-item">🛒 购物车</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="product-detail-container">
+            <div class="product-image-section" id="productImage"></div>
+            
+            <div class="product-info-section">
+                <h2 class="product-name" id="productName"></h2>
+                <div class="product-price" id="productPrice"></div>
+                <p class="product-description" id="productDescription"></p>
+
+                <div class="quantity-control">
+                    <label>数量：</label>
+                    <button onclick="decreaseQuantity()">−</button>
+                    <input type="number" id="quantity" value="1" min="1" max="999">
+                    <button onclick="increaseQuantity()">+</button>
+                </div>
+
+                <button class="btn-add-cart" onclick="addToCart()">🛒 加入购物车</button>
+                <button class="btn-back" onclick="goBack()">← 返回首页</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取URL参数中的商品ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = parseInt(urlParams.get('id'));
+
+        // 商品列表（和首页一样）
+        const products = [
+            { id: 1, name: '笔记本', emoji: '📓', description: '精美的学生笔记本，适合记录课堂笔记。采用高质量纸张，书写流畅，耐用性强。适合日常学习和记录重要信息。', price: 29.99 },
+            { id: 2, name: '钢笔套装', emoji: '✏️', description: '高质量钢笔套装，书写流畅，笔迹清晰。包含多支笔，送朋友必备。送礼首选，质量有保证。', price: 49.99 },
+            { id: 3, name: '手账贴纸', emoji: '🎨', description: '可爱的装饰贴纸，让你的手账更有趣。多种设计可选，色彩鲜艳，粘性好。', price: 19.99 },
+            { id: 4, name: '书签', emoji: '🔖', description: '创意书签，多种设计可选。防水材质，经久耐用。是阅读爱好者的必备品。', price: 14.99 },
+            { id: 5, name: '手机支架', emoji: '📱', description: '便携式手机支架，学习追剧必备。稳固耐用，支持多种角度调节。', price: 39.99 },
+            { id: 6, name: '帆布包', emoji: '🎒', description: '环保帆布包，轻便耐用，适合上学。容量大，多个收纳袋，背着舒适。', price: 79.99 }
+        ];
+
+        // 页面加载
+        window.addEventListener('DOMContentLoaded', () => {
+            displayProductDetail();
+            updateLoginStatus();
+        });
+
+        function displayProductDetail() {
+            const product = products.find(p => p.id === productId);
+            
+            if (!product) {
+                alert('商品未找到');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('productImage').textContent = product.emoji;
+            document.getElementById('productName').textContent = product.name;
+            document.getElementById('productPrice').textContent = `¥${product.price}`;
+            document.getElementById('productDescription').textContent = product.description;
+        }
+
+        function increaseQuantity() {
+            const input = document.getElementById('quantity');
+            input.value = parseInt(input.value) + 1;
+        }
+
+        function decreaseQuantity() {
+            const input = document.getElementById('quantity');
+            if (parseInt(input.value) > 1) {
+                input.value = parseInt(input.value) - 1;
+            }
+        }
+
+        function addToCart() {
+            // 检查登录
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser) {
+                alert('请先登录');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const product = products.find(p => p.id === productId);
+
+            // 获取购物车
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            // 检查商品是否已在购物车
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({
+                    id: productId,
+                    name: product.name,
+                    emoji: product.emoji,
+                    price: product.price,
+                    quantity: quantity
+                });
+            }
+
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert(`✅ 已将 "${product.name}" (${quantity}件) 加入购物车！`);
+            
+            // 重置数量
+            document.getElementById('quantity').value = 1;
+        }
+
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
+        function updateLoginStatus() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const loginLink = document.querySelector('a[href="login.html"]');
+            
+            if (currentUser && loginLink) {
+                loginLink.textContent = `👤 ${currentUser.username}`;
+                loginLink.href = '#';
+                loginLink.onclick = (e) => {
+                    e.preventDefault();
+                    logout();
+                };
+            }
+        }
+
+        function logout() {
+            if (confirm('确定要登出吗？')) {
+                localStorage.removeItem('currentUser');
+                window.location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
