@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>管理员面板 - Dore Shop</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f5f5f5; }
+
+    nav {
+      background: #c0392b;
+      padding: 1rem;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-right: 2rem;
+    }
+
+    nav a:hover { opacity: 0.8; }
+
+    .container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
+
+    h1 { color: #2c3e50; margin-bottom: 1rem; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .stat-label { color: #999; font-size: 0.9rem; }
+    .stat-value { font-size: 2rem; font-weight: bold; color: #e74c3c; margin-top: 0.5rem; }
+
+    .orders-table {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: #34495e;
+      color: white;
+      padding: 1rem;
+      text-align: left;
+      font-weight: bold;
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    tr:hover { background: #f9f9f9; }
+
+    .status-select {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .update-btn {
+      background: #27ae60;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .update-btn:hover { background: #229954; }
+
+    .empty { text-align: center; color: #999; padding: 2rem; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">🏠 首页</a>
+    <a href="orders.html">📋 我的订单</a>
+    <a href="admin.html">🔐 管理</a>
+    <h3 style="display: inline; color: white;">管理员面板</h3>
+  </nav>
+
+  <div class="container">
+    <h1>📊 销售统计</h1>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">总订单数</div>
+        <div class="stat-value" id="totalOrders">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">总销售额</div>
+        <div class="stat-value">¥<span id="totalSales">0.00</span></div>
+      </div>
+    </div>
+
+    <h1>📋 所有订单</h1>
+
+    <div class="orders-table">
+      <table>
+        <thead>
+          <tr>
+            <th>订单号</th>
+            <th>用户</th>
+            <th>商品</th>
+            <th>总额</th>
+            <th>日期</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="ordersBody">
+          <tr><td colspan="7" class="empty">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    console.log('=== 管理员面板加载 ===');
+    loadAdminData();
+
+    async function loadAdminData() {
+      console.log('开始加载管理员数据...');
+
+      try {
+        const response = await fetch('/api/admin/orders');
+        console.log('API 响应状态:', response.status);
+        console.log('Content-Type:', response.headers.get('content-type'));
+
+        if (!response.ok) {
+          console.error('API 返回错误状态:', response.status);
+          document.getElementById('ordersBody').innerHTML = `<tr><td colspan="7" class="empty">❌ API 错误: ${response.status}</td></tr>`;
+          return;
+        }
+
+        const text = await response.text();
+        console.log('API 原始返回:', text.substring(0, 500));
+
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          console.error('JSON 解析失败:', e.message);
+          document.getElementById('ordersBody').innerHTML = '<tr><td colspan="7" class="empty">数据格式错误</td></tr>';
+          return;
+        }
+
+        console.log('解析后的数据:', data);
+
+        document.getElementById('totalOrders').textContent = data.totalOrders || 0;
+        document.getElementById('totalSales').textContent = (data.totalSales || 0).toFixed(2);
+
+        if (!data.orders || data.orders.length === 0) {
+          console.log('没有订单');
+          document.getElementById('ordersBody').innerHTML = '<tr><td colspan="7" class="empty">暂无订单</td></tr>';
+          return;
+        }
+
+        console.log('订单数:', data.orders.length);
+
+        let html = '';
+        data.orders.forEach((order, index) => {
+          console.log(`处理订单 ${index}:`, order);
+
+          if (!order._id || !order.items) {
+            console.warn('订单字段不完整:', order);
+            return;
+          }
+
+          const itemsText = order.items.map(i => i.name).join(', ');
+          const orderDate = order.orderDate ? new Date(order.orderDate).toLocaleDateString('zh-CN') : '未知日期';
+
+          html += `
+            <tr>
+              <td><small>${order._id}</small></td>
+              <td>${order.username || '未知用户'}</td>
+              <td>${itemsText}</td>
+              <td>¥${order.totalAmount.toFixed(2)}</td>
+              <td>${orderDate}</td>
+              <td>
+                <select class="status-select" id="status-${order._id}" value="${order.status || '已下单'}">
+                  <option value="已下单">已下单</option>
+                  <option value="已发货">已发货</option>
+                  <option value="已完成">已完成</option>
+                  <option value="已取消">已取消</option>
+                </select>
+              </td>
+              <td>
+                <button class="update-btn" onclick="updateOrderStatus('${order._id}')">更新</button>
+              </td>
+            </tr>
+          `;
+        });
+
+        if (html) {
+          document.getElementById('ordersBody').innerHTML = html;
+          console.log('订单表格显示完成');
+        } else {
+          document.getElementById('ordersBody').innerHTML = '<tr><td colspan="7" class="empty">订单数据异常</td></tr>';
+        }
+
+      } catch (err) {
+        console.error('加载管理数据异常:', err);
+        console.error('错误类型:', err.name);
+        console.error('错误信息:', err.message);
+        document.getElementById('ordersBody').innerHTML = `<tr><td colspan="7" class="empty">加载失败：${err.message}</td></tr>`;
+      }
+    }
+
+    async function updateOrderStatus(orderId) {
+      const selectElement = document.getElementById('status-' + orderId);
+      const status = selectElement.value;
+
+      console.log('更新订单:', orderId, '状态:', status);
+
+      try {
+        const response = await fetch(`/api/admin/orders/${orderId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+
+        console.log('更新响应状态:', response.status);
+
+        const result = await response.json();
+        console.log('更新结果:', result);
+
+        if (result.success) {
+          alert('✅ 订单状态已更新');
+          loadAdminData();
+        } else {
+          alert('❌ 更新失败: ' + (result.message || '未知错误'));
+        }
+      } catch (err) {
+        console.error('更新失败:', err);
+        alert('❌ 更新出错: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,382 +1,403 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>购物车 - Dore Shop</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        .cart-container {
-            max-width: 1000px;
-            margin: 30px auto;
-            padding: 20px;
-        }
+  <title>购物车 - Dore Shop</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f5f5f5; }
 
-        .cart-title {
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 30px;
-        }
+    nav {
+      background: #2c3e50;
+      padding: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
 
-        .cart-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
-        }
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-right: 2rem;
+      cursor: pointer;
+    }
 
-        .cart-items {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
+    nav a:hover { color: #3498db; }
 
-        .cart-item {
-            display: flex;
-            gap: 20px;
-            padding: 20px;
-            border-bottom: 1px solid #f0f0f0;
-            align-items: center;
-        }
+    .nav-right { display: flex; align-items: center; }
+    .nav-right span { color: white; margin-right: 2rem; }
 
-        .cart-item:last-child {
-            border-bottom: none;
-        }
+    .logout-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
 
-        .item-emoji {
-            font-size: 60px;
-            min-width: 80px;
-            text-align: center;
-        }
+    .logout-btn:hover { background: #c0392b; }
 
-        .item-info {
-            flex: 1;
-        }
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
 
-        .item-name {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
+    h1 { color: #2c3e50; margin-bottom: 2rem; }
 
-        .item-price {
-            font-size: 16px;
-            color: #667eea;
-            font-weight: bold;
-        }
+    .cart-content {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+    }
 
-        .item-quantity {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-top: 10px;
-        }
+    .cart-items {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
 
-        .quantity-btn {
-            width: 30px;
-            height: 30px;
-            border: 1px solid #ddd;
-            background: white;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 16px;
-        }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid #eee;
+    }
 
-        .quantity-btn:hover {
-            background: #f5f5f5;
-        }
+    .cart-item:last-child { border-bottom: none; }
 
-        .btn-remove {
-            background: #fee2e2;
-            color: #dc2626;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
+    .item-info { flex: 1; }
+    .item-name { font-weight: bold; color: #2c3e50; margin-bottom: 0.5rem; }
+    .item-price { color: #e74c3c; }
 
-        .btn-remove:hover {
-            background: #fecaca;
-        }
+    .item-control {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
 
-        .cart-summary {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            height: fit-content;
-            position: sticky;
-            top: 20px;
-        }
+    .qty-btn {
+      background: #ddd;
+      border: none;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
 
-        .summary-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
+    .qty-btn:hover { background: #ccc; }
 
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #f0f0f0;
-        }
+    .qty-display {
+      min-width: 30px;
+      text-align: center;
+    }
 
-        .summary-item.total {
-            font-size: 20px;
-            font-weight: bold;
-            color: #667eea;
-            border-bottom: none;
-            margin-bottom: 20px;
-        }
+    .remove-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
 
-        .btn-checkout {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 10px;
-        }
+    .remove-btn:hover { background: #c0392b; }
 
-        .btn-checkout:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
+    .cart-summary {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      height: fit-content;
+    }
 
-        .btn-continue {
-            width: 100%;
-            padding: 12px;
-            background: #f5f5f5;
-            color: #333;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #eee;
+    }
 
-        .btn-continue:hover {
-            background: #e0e0e0;
-        }
+    .summary-row:last-of-type { border-bottom: none; padding-bottom: 0; }
 
-        .empty-cart {
-            text-align: center;
-            padding: 60px 20px;
-        }
+    .summary-total {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #e74c3c;
+      text-align: right;
+    }
 
-        .empty-icon {
-            font-size: 60px;
-            margin-bottom: 20px;
-        }
+    .checkout-btn {
+      width: 100%;
+      padding: 1rem;
+      background: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
 
-        .empty-text {
-            font-size: 18px;
-            color: #999;
-            margin-bottom: 30px;
-        }
+    .checkout-btn:hover { background: #229954; }
 
-        @media (max-width: 768px) {
-            .cart-content {
-                grid-template-columns: 1fr;
-            }
+    .empty-cart {
+      text-align: center;
+      padding: 2rem;
+      color: #999;
+    }
 
-            .cart-summary {
-                position: static;
-            }
+    .back-btn {
+      background: #6c757d;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+    }
 
-            .cart-item {
-                flex-wrap: wrap;
-            }
-        }
-    </style>
+    .back-btn:hover { background: #5a6268; }
+
+    .message {
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+  </style>
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <h1>🛍️ Dore Shop</h1>
-            <p>学生创意商品小店</p>
-        </div>
-    </header>
-
-    <nav class="navbar">
-        <div class="container">
-            <a href="index.html" class="nav-item">🏠 首页</a>
-            <a href="login.html" class="nav-item">👤 登录</a>
-            <a href="cart.html" class="nav-item">🛒 购物车</a>
-        </div>
-    </nav>
-
-    <div class="cart-container">
-        <h2 class="cart-title">🛒 购物车</h2>
-
-        <div class="cart-content">
-            <!-- 购物车物品列表 -->
-            <div class="cart-items" id="cartItems">
-                <div class="empty-cart">
-                    <div class="empty-icon">📭</div>
-                    <div class="empty-text">购物车是空的</div>
-                    <a href="index.html" class="btn-continue">← 继续购物</a>
-                </div>
-            </div>
-
-            <!-- 购物车总结 -->
-            <div class="cart-summary">
-                <div class="summary-title">订单总结</div>
-
-                <div class="summary-item">
-                    <span>商品数量</span>
-                    <span id="totalQuantity">0</span>
-                </div>
-
-                <div class="summary-item">
-                    <span>小计</span>
-                    <span id="subtotal">¥0.00</span>
-                </div>
-
-                <div class="summary-item">
-                    <span>运费</span>
-                    <span>免费</span>
-                </div>
-
-                <div class="summary-item total">
-                    <span>总计</span>
-                    <span id="totalPrice">¥0.00</span>
-                </div>
-
-                <button class="btn-checkout" onclick="checkout()">去结账</button>
-                <a href="index.html" class="btn-continue">继续购物</a>
-            </div>
-        </div>
+  <nav>
+    <div>
+      <a href="index.html">🏠 首页</a>
+      <a href="cart.html">🛒 购物车</a>
+      <a href="orders.html">📋 我的订单</a>
+      <a href="admin.html">🔐 管理</a>
     </div>
+    <div class="nav-right">
+      <span id="userDisplay"></span>
+      <button class="logout-btn" id="logoutBtn" style="display: none;">退出登录</button>
+    </div>
+  </nav>
 
-    <script>
-        // 页面加载
-        window.addEventListener('DOMContentLoaded', () => {
-            displayCart();
-            updateLoginStatus();
+  <div class="container">
+    <h1>🛒 购物车</h1>
+    <button class="back-btn" onclick="window.location.href='index.html'">← 继续购物</button>
+
+    <div id="messageDiv"></div>
+
+    <div class="cart-content">
+      <div class="cart-items" id="cartItemsContainer">
+        <div class="empty-cart">购物车为空 🛒</div>
+      </div>
+
+      <div class="cart-summary">
+        <div class="summary-row">
+          <span>商品数量:</span>
+          <span id="itemCount">0</span>
+        </div>
+        <div class="summary-row">
+          <span>小计:</span>
+          <span id="subtotal">¥0.00</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-total">总计: <span id="total">¥0.00</span></span>
+        </div>
+        <button class="checkout-btn" onclick="checkout()">结账</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('=== 购物车页面加载 ===');
+
+    window.addEventListener('load', () => {
+      console.log('页面加载完成');
+      checkLogin();
+      displayCart();
+    });
+
+    function checkLogin() {
+      const currentUserStr = localStorage.getItem('currentUser');
+      console.log('检查登录状态:', currentUserStr);
+
+      if (currentUserStr) {
+        try {
+          const user = JSON.parse(currentUserStr);
+          console.log('用户已登录:', user);
+          document.getElementById('userDisplay').textContent = '👤 ' + user.username;
+          document.getElementById('logoutBtn').style.display = 'inline-block';
+        } catch (e) {
+          console.error('用户信息损坏:', e);
+          localStorage.removeItem('currentUser');
+          redirectToLogin();
+        }
+      } else {
+        redirectToLogin();
+      }
+    }
+
+    function redirectToLogin() {
+      console.log('用户未登录，重定向到首页');
+      window.location.href = 'index.html';
+    }
+
+    function displayCart() {
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+      const container = document.getElementById('cartItemsContainer');
+
+      console.log('购物车数据:', cart);
+
+      if (cart.length === 0) {
+        container.innerHTML = '<div class="empty-cart">购物车为空 🛒</div>';
+        document.getElementById('itemCount').textContent = '0';
+        document.getElementById('subtotal').textContent = '¥0.00';
+        document.getElementById('total').textContent = '¥0.00';
+        return;
+      }
+
+      let html = '';
+      let totalAmount = 0;
+      let totalQty = 0;
+
+      cart.forEach((item, index) => {
+        const itemTotal = item.price * item.quantity;
+        totalAmount += itemTotal;
+        totalQty += item.quantity;
+
+        html += `
+          <div class="cart-item">
+            <div class="item-info">
+              <div class="item-name">${item.name}</div>
+              <div class="item-price">¥${item.price.toFixed(2)}</div>
+            </div>
+            <div class="item-control">
+              <button class="qty-btn" onclick="decreaseQty(${index})">-</button>
+              <div class="qty-display">${item.quantity}</div>
+              <button class="qty-btn" onclick="increaseQty(${index})">+</button>
+              <span style="margin: 0 0.5rem;">¥${itemTotal.toFixed(2)}</span>
+              <button class="remove-btn" onclick="removeItem(${index})">删除</button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      document.getElementById('itemCount').textContent = totalQty;
+      document.getElementById('subtotal').textContent = '¥' + totalAmount.toFixed(2);
+      document.getElementById('total').textContent = '¥' + totalAmount.toFixed(2);
+
+      console.log('购物车总金额:', totalAmount);
+    }
+
+    function increaseQty(index) {
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+      if (cart[index]) {
+        cart[index].quantity += 1;
+        localStorage.setItem('cart', JSON.stringify(cart));
+        displayCart();
+      }
+    }
+
+    function decreaseQty(index) {
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+      if (cart[index] && cart[index].quantity > 1) {
+        cart[index].quantity -= 1;
+        localStorage.setItem('cart', JSON.stringify(cart));
+        displayCart();
+      }
+    }
+
+    function removeItem(index) {
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+      cart.splice(index, 1);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      displayCart();
+    }
+
+    async function checkout() {
+      const currentUserStr = localStorage.getItem('currentUser');
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+      console.log('开始结账...');
+      console.log('用户信息:', currentUserStr);
+      console.log('购物车:', cart);
+
+      if (!currentUserStr) {
+        document.getElementById('messageDiv').innerHTML = '<div class="message error">❌ 请先登录</div>';
+        return;
+      }
+
+      if (cart.length === 0) {
+        document.getElementById('messageDiv').innerHTML = '<div class="message error">❌ 购物车为空</div>';
+        return;
+      }
+
+      try {
+        const user = JSON.parse(currentUserStr);
+        const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+        console.log('用户ID:', user.id);
+        console.log('用户名:', user.username);
+        console.log('总金额:', totalAmount);
+
+        const orderData = {
+          userId: user.id,
+          username: user.username,
+          items: cart,
+          totalAmount: totalAmount
+        };
+
+        console.log('发送订单数据到服务器:', orderData);
+
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
         });
 
-        function displayCart() {
-            const cart = JSON.parse(localStorage.getItem('cart')) || [];
-            const cartItemsDiv = document.getElementById('cartItems');
+        console.log('响应状态:', response.status);
+        const result = await response.json();
+        console.log('响应数据:', result);
 
-            if (cart.length === 0) {
-                cartItemsDiv.innerHTML = `
-                    <div class="empty-cart">
-                        <div class="empty-icon">📭</div>
-                        <div class="empty-text">购物车是空的</div>
-                        <a href="index.html" class="btn-continue">← 继续购物</a>
-                    </div>
-                `;
-                updateSummary([], cart);
-                return;
-            }
+        if (result.success) {
+          console.log('✅ 订单创建成功!');
+          document.getElementById('messageDiv').innerHTML = '<div class="message success">✅ 订单已生成！正在跳转...</div>';
 
-            const itemsHTML = cart.map(item => `
-                <div class="cart-item">
-                    <div class="item-emoji">${item.emoji}</div>
-                    <div class="item-info">
-                        <div class="item-name">${item.name}</div>
-                        <div class="item-price">¥${item.price}</div>
-                        <div class="item-quantity">
-                            <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">−</button>
-                            <span>${item.quantity}</span>
-                            <button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
-                        </div>
-                    </div>
-                    <button class="btn-remove" onclick="removeFromCart(${item.id})">删除</button>
-                </div>
-            `).join('');
+          // 清空购物车
+          localStorage.removeItem('cart');
 
-            cartItemsDiv.innerHTML = itemsHTML;
-            updateSummary(cart, cart);
+          // 延迟后跳转到订单页面
+          setTimeout(() => {
+            window.location.href = 'orders.html';
+          }, 1500);
+        } else {
+          console.log('❌ 订单创建失败:', result.message);
+          document.getElementById('messageDiv').innerHTML = `<div class="message error">❌ ${result.message}</div>`;
         }
+      } catch (err) {
+        console.error('结账错误:', err);
+        document.getElementById('messageDiv').innerHTML = `<div class="message error">❌ 结账失败：${err.message}</div>`;
+      }
+    }
 
-        function updateQuantity(productId, change) {
-            const cart = JSON.parse(localStorage.getItem('cart')) || [];
-            const item = cart.find(i => i.id === productId);
+    function logout() {
+      console.log('用户退出登录');
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('cart');
+      window.location.href = 'index.html';
+    }
 
-            if (item) {
-                item.quantity += change;
-                if (item.quantity < 1) {
-                    item.quantity = 1;
-                }
-                localStorage.setItem('cart', JSON.stringify(cart));
-                displayCart();
-            }
-        }
-
-        function removeFromCart(productId) {
-            if (confirm('确定删除这件商品吗？')) {
-                let cart = JSON.parse(localStorage.getItem('cart')) || [];
-                cart = cart.filter(item => item.id !== productId);
-                localStorage.setItem('cart', JSON.stringify(cart));
-                displayCart();
-            }
-        }
-
-        function updateSummary(cart, allCart) {
-            const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
-            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-            document.getElementById('totalQuantity').textContent = totalQuantity;
-            document.getElementById('subtotal').textContent = `¥${totalPrice.toFixed(2)}`;
-            document.getElementById('totalPrice').textContent = `¥${totalPrice.toFixed(2)}`;
-        }
-
-        function checkout() {
-            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            if (!currentUser) {
-                alert('请先登录');
-                window.location.href = 'login.html';
-                return;
-            }
-
-            const cart = JSON.parse(localStorage.getItem('cart')) || [];
-            if (cart.length === 0) {
-                alert('购物车是空的');
-                return;
-            }
-
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            alert(`✅ 订单已提交！\n总金额：¥${total.toFixed(2)}\n\n感谢购物！`);
-            
-            // 清空购物车
-            localStorage.removeItem('cart');
-            displayCart();
-        }
-
-        function updateLoginStatus() {
-            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            const loginLink = document.querySelector('a[href="login.html"]');
-            
-            if (currentUser && loginLink) {
-                loginLink.textContent = `👤 ${currentUser.username}`;
-                loginLink.href = '#';
-                loginLink.onclick = (e) => {
-                    e.preventDefault();
-                    logout();
-                };
-            }
-        }
-
-        function logout() {
-            if (confirm('确定要登出吗？')) {
-                localStorage.removeItem('currentUser');
-                window.location.reload();
-            }
-        }
-    </script>
+    // 退出登录按钮
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+  </script>
 </body>
 </html>

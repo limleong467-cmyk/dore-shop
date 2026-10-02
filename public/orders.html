@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>我的订单 - Dore Shop</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f5f5f5; }
+
+    nav {
+      background: #2c3e50;
+      padding: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-right: 2rem;
+      cursor: pointer;
+    }
+
+    nav a:hover { color: #3498db; }
+
+    .nav-right { display: flex; align-items: center; }
+    .nav-right span { color: white; margin-right: 2rem; }
+
+    .logout-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover { background: #c0392b; }
+
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+
+    h1 { color: #2c3e50; margin-bottom: 2rem; }
+
+    .order-card {
+      background: white;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-left: 4px solid #3498db;
+    }
+
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    .order-id { font-weight: bold; color: #2c3e50; }
+    .order-date { color: #999; font-size: 0.9rem; }
+    .order-status {
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+
+    .status-已下单 { background: #fff3cd; color: #856404; }
+    .status-已发货 { background: #cfe2ff; color: #084298; }
+    .status-已完成 { background: #d1e7dd; color: #0f5132; }
+    .status-已取消 { background: #f8d7da; color: #842029; }
+
+    .order-items { margin-bottom: 1rem; }
+    .item { padding: 0.8rem 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; }
+    .item:last-child { border-bottom: none; }
+    .item-name { flex: 1; }
+    .item-qty { color: #999; margin: 0 1rem; }
+    .item-price { font-weight: bold; color: #e74c3c; }
+
+    .order-total {
+      text-align: right;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #e74c3c;
+      padding-top: 1rem;
+      border-top: 2px solid #eee;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 2rem;
+      color: #999;
+      font-size: 1.1rem;
+    }
+
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 2rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #999;
+    }
+
+    .back-btn {
+      background: #6c757d;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+    }
+
+    .back-btn:hover { background: #5a6268; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div>
+      <a href="index.html">🏠 首页</a>
+      <a href="cart.html">🛒 购物车</a>
+      <a href="orders.html">📋 我的订单</a>
+      <a href="admin.html">🔐 管理</a>
+    </div>
+    <div class="nav-right">
+      <span id="userDisplay"></span>
+      <button class="logout-btn" id="logoutBtn" style="display: none;">退出登录</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>📋 我的订单</h1>
+    <button class="back-btn" onclick="window.location.href='index.html'">← 返回首页</button>
+
+    <div id="ordersContainer"></div>
+  </div>
+
+  <script>
+    console.log('=== 订单页面加载 ===');
+
+    window.addEventListener('load', () => {
+      console.log('页面加载完成');
+      checkLogin();
+      loadOrders();
+    });
+
+    function checkLogin() {
+      const currentUserStr = localStorage.getItem('currentUser');
+      console.log('检查登录状态:', currentUserStr);
+
+      if (currentUserStr) {
+        try {
+          const user = JSON.parse(currentUserStr);
+          console.log('用户已登录:', user);
+          document.getElementById('userDisplay').textContent = '👤 ' + user.username;
+          document.getElementById('logoutBtn').style.display = 'inline-block';
+        } catch (e) {
+          console.error('用户信息损坏:', e);
+          localStorage.removeItem('currentUser');
+          redirectToLogin();
+        }
+      } else {
+        redirectToLogin();
+      }
+    }
+
+    function redirectToLogin() {
+      console.log('用户未登录，重定向到首页');
+      window.location.href = 'index.html';
+    }
+
+    async function loadOrders() {
+      const container = document.getElementById('ordersContainer');
+      const currentUserStr = localStorage.getItem('currentUser');
+
+      console.log('开始加载订单...');
+      console.log('currentUserStr:', currentUserStr);
+
+      if (!currentUserStr) {
+        container.innerHTML = '<div class="error">❌ 未找到登录信息，请重新登录</div>';
+        return;
+      }
+
+      try {
+        const user = JSON.parse(currentUserStr);
+        console.log('用户对象:', user);
+        console.log('用户ID:', user.id);
+        console.log('用户名:', user.username);
+
+        if (!user.id) {
+          console.error('用户ID为空');
+          container.innerHTML = '<div class="error">❌ 用户ID错误，请重新登录</div>';
+          return;
+        }
+
+        const userId = user.id;
+        console.log('获取订单URL: /api/orders/' + userId);
+
+        container.innerHTML = '<div class="loading">⏳ 加载中...</div>';
+
+        const response = await fetch(`/api/orders/${userId}`);
+        console.log('API 响应状态:', response.status);
+
+        if (!response.ok) {
+          console.error('API 返回错误:', response.status);
+          container.innerHTML = `<div class="error">❌ 获取订单失败: ${response.status}</div>`;
+          return;
+        }
+
+        const orders = await response.json();
+        console.log('订单数据:', orders);
+        console.log('订单数量:', orders.length);
+
+        if (!orders || orders.length === 0) {
+          console.log('暂无订单');
+          container.innerHTML = '<div class="empty">暂无订单 📭</div>';
+          return;
+        }
+
+        let html = '';
+        orders.forEach((order, index) => {
+          console.log(`处理订单 ${index}:`, order);
+
+          const orderDate = order.orderDate
+            ? new Date(order.orderDate).toLocaleDateString('zh-CN')
+            : '未知日期';
+
+          const itemsHtml = (order.items || []).map(item => `
+            <div class="item">
+              <div class="item-name">${item.name}</div>
+              <div class="item-qty">x${item.quantity}</div>
+              <div class="item-price">¥${item.price.toFixed(2)}</div>
+            </div>
+          `).join('');
+
+          const statusClass = `status-${order.status || '已下单'}`;
+
+          html += `
+            <div class="order-card">
+              <div class="order-header">
+                <div>
+                  <div class="order-id">订单号: ${order._id}</div>
+                  <div class="order-date">日期: ${orderDate}</div>
+                </div>
+                <div class="order-status ${statusClass}">${order.status || '已下单'}</div>
+              </div>
+              <div class="order-items">
+                ${itemsHtml}
+              </div>
+              <div class="order-total">
+                总金额: ¥${(order.totalAmount || 0).toFixed(2)}
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+        console.log('订单显示完成');
+
+      } catch (err) {
+        console.error('加载订单错误:', err);
+        container.innerHTML = `<div class="error">❌ 加载失败: ${err.message}</div>`;
+      }
+    }
+
+    function logout() {
+      console.log('用户退出登录');
+      localStorage.removeItem('currentUser');
+      window.location.href = 'index.html';
+    }
+
+    // 退出登录按钮
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+  </script>
+</body>
+</html>

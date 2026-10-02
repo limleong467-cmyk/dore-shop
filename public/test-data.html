@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>数据库测试 - Dore Shop</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    button { padding: 10px 20px; margin: 10px 0; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #2980b9; }
+    .box { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 4px; }
+    pre { background: #2c3e50; color: #ecf0f1; padding: 10px; border-radius: 4px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Dore Shop 数据库测试</h1>
+
+  <div class="box">
+    <h2>1. 检查所有订单</h2>
+    <button onclick="checkAllOrders()">查看所有订单</button>
+    <div id="allOrders"></div>
+  </div>
+
+  <div class="box">
+    <h2>2. 检查当前用户订单</h2>
+    <button onclick="checkMyOrders()">查看我的订单</button>
+    <div id="myOrders"></div>
+  </div>
+
+  <div class="box">
+    <h2>3. 当前用户信息</h2>
+    <button onclick="showUserInfo()">显示用户信息</button>
+    <div id="userInfo"></div>
+  </div>
+
+  <script>
+    async function checkAllOrders() {
+      const result = document.getElementById('allOrders');
+      result.innerHTML = '加载中...';
+
+      try {
+        const response = await fetch('/api/admin/orders');
+        const data = await response.json();
+
+        if (data.orders && data.orders.length > 0) {
+          let html = `<p>✅ 找到 ${data.orders.length} 个订单</p>`;
+          html += `<p>总销售额：¥${data.totalSales}</p>`;
+          html += '<pre>' + JSON.stringify(data.orders, null, 2) + '</pre>';
+          result.innerHTML = html;
+        } else {
+          result.innerHTML = '<p>❌ 没有订单</p><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+      } catch (err) {
+        result.innerHTML = '<p>❌ 错误：' + err.message + '</p>';
+      }
+    }
+
+    async function checkMyOrders() {
+      const result = document.getElementById('myOrders');
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+      if (!currentUser) {
+        result.innerHTML = '<p>❌ 未登录</p>';
+        return;
+      }
+
+      result.innerHTML = '加载中...';
+
+      try {
+        const response = await fetch(`/api/orders/${currentUser.id}`);
+        const data = await response.json();
+
+        console.log('API 返回:', data);
+
+        if (data && data.length > 0) {
+          result.innerHTML = `<p>✅ 找到 ${data.length} 个订单</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+        } else {
+          result.innerHTML = `<p>❌ 没有订单</p><p>userId: ${currentUser.id}</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+      } catch (err) {
+        result.innerHTML = '<p>❌ 错误：' + err.message + '</p>';
+      }
+    }
+
+    function showUserInfo() {
+      const result = document.getElementById('userInfo');
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+      if (!currentUser) {
+        result.innerHTML = '<p>❌ 未登录</p>';
+      } else {
+        result.innerHTML = '<pre>' + JSON.stringify(currentUser, null, 2) + '</pre>';
+      }
+    }
+  </script>
+</body>
+</html>

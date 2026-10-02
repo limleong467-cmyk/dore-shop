@@ -1,40 +1,386 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dore Shop - 学生小店</title>
-    <link rel="stylesheet" href="style.css">
+  <title>Dore Shop - 在线购物</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #f5f5f5; }
+
+    nav {
+      background: #2c3e50;
+      padding: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin-right: 2rem;
+      cursor: pointer;
+    }
+
+    nav a:hover { color: #3498db; }
+
+    .nav-right { display: flex; align-items: center; }
+    .nav-right span { color: white; margin-right: 2rem; }
+
+    .logout-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover { background: #c0392b; }
+
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+
+    .auth-section {
+      background: white;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .auth-section h2 { color: #2c3e50; margin-bottom: 1.5rem; }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #2c3e50;
+      font-weight: bold;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      width: 100%;
+    }
+
+    button:hover { background: #2980b9; }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .product-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .product-name { font-weight: bold; color: #2c3e50; margin-bottom: 0.5rem; }
+    .product-price { font-size: 1.5rem; color: #e74c3c; margin-bottom: 1rem; }
+
+    .product-card button {
+      background: #27ae60;
+      font-size: 0.9rem;
+      padding: 0.5rem;
+    }
+
+    .product-card button:hover { background: #229954; }
+
+    .hidden { display: none; }
+    .message { padding: 1rem; margin: 1rem 0; border-radius: 4px; text-align: center; }
+    .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+  </style>
 </head>
 <body>
-    <header class="header">
-        <div class="container">
-            <h1>🛍️ Dore Shop</h1>
-            <p>学生创意商品小店</p>
+  <nav>
+    <div>
+      <a href="index.html">🏠 首页</a>
+      <a href="cart.html">🛒 购物车</a>
+      <a href="orders.html">📋 我的订单</a>
+      <a href="admin.html">🔐 管理</a>
+    </div>
+    <div class="nav-right">
+      <span id="userDisplay"></span>
+      <button class="logout-btn" id="logoutBtn" style="display: none;">退出登录</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div id="authSection" class="auth-section">
+      <div id="loginForm">
+        <h2>🔐 登录</h2>
+        <div class="form-group">
+          <label>用户名或邮箱</label>
+          <input type="text" id="loginUsername" placeholder="输入用户名或邮箱">
         </div>
-    </header>
-
-    <nav class="navbar">
-        <div class="container">
-            <a href="index.html" class="nav-item">🏠 首页</a>
-            <a href="login.html" class="nav-item">👤 登录</a>
-            <a href="cart.html" class="nav-item">🛒 购物车</a>
+        <div class="form-group">
+          <label>密码</label>
+          <input type="password" id="loginPassword" placeholder="输入密码">
         </div>
-    </nav>
+        <button onclick="login()">登录</button>
+        <p style="text-align: center; margin-top: 1rem;">
+          没有账户？<a href="#" onclick="switchToRegister()" style="color: #3498db; cursor: pointer;">注册</a>
+        </p>
+        <div id="loginMessage"></div>
+      </div>
 
-    <main class="container">
-        <section class="products">
-            <h2>热门商品</h2>
-            <div class="products-grid" id="productsList">
-                <!-- 商品会动态显示在这里 -->
-            </div>
-        </section>
-    </main>
+      <div id="registerForm" class="hidden">
+        <h2>📝 注册</h2>
+        <div class="form-group">
+          <label>用户名</label>
+          <input type="text" id="regUsername" placeholder="选择用户名">
+        </div>
+        <div class="form-group">
+          <label>邮箱</label>
+          <input type="email" id="regEmail" placeholder="输入邮箱">
+        </div>
+        <div class="form-group">
+          <label>密码</label>
+          <input type="password" id="regPassword" placeholder="至少6个字符">
+        </div>
+        <button onclick="register()">注册</button>
+        <p style="text-align: center; margin-top: 1rem;">
+          已有账户？<a href="#" onclick="switchToLogin()" style="color: #3498db; cursor: pointer;">登录</a>
+        </p>
+        <div id="regMessage"></div>
+      </div>
+    </div>
 
-    <footer class="footer">
-        <p>&copy; 2024 Dore Shop. 所有权利保留。</p>
-    </footer>
+    <div id="productsSection" class="hidden">
+      <h1>🛍️ 商品列表</h1>
+      <div class="products" id="productList"></div>
+    </div>
+  </div>
 
-    <script src="script.js"></script>
+  <script>
+    console.log('=== 首页加载 ===');
+
+    // 商品数据
+    const products = [
+      { id: 1, name: '手机壳', price: 19.99 },
+      { id: 2, name: '充电线', price: 29.99 },
+      { id: 3, name: '屏幕贴膜', price: 9.99 },
+      { id: 4, name: '蓝牙耳机', price: 79.99 }
+    ];
+
+    // 初始化页面
+    window.addEventListener('load', () => {
+      console.log('页面加载完成');
+      checkLogin();
+      displayProducts();
+    });
+
+    function checkLogin() {
+      const currentUserStr = localStorage.getItem('currentUser');
+      console.log('检查登录状态:', currentUserStr);
+
+      if (currentUserStr) {
+        try {
+          const user = JSON.parse(currentUserStr);
+          console.log('用户已登录:', user);
+          document.getElementById('authSection').classList.add('hidden');
+          document.getElementById('productsSection').classList.remove('hidden');
+          document.getElementById('userDisplay').textContent = '👤 ' + user.username;
+          document.getElementById('logoutBtn').style.display = 'inline-block';
+        } catch (e) {
+          console.error('用户信息损坏:', e);
+          localStorage.removeItem('currentUser');
+          showLogin();
+        }
+      } else {
+        showLogin();
+      }
+    }
+
+    function showLogin() {
+      document.getElementById('authSection').classList.remove('hidden');
+      document.getElementById('productsSection').classList.add('hidden');
+      document.getElementById('loginForm').classList.remove('hidden');
+      document.getElementById('registerForm').classList.add('hidden');
+      document.getElementById('userDisplay').textContent = '';
+      document.getElementById('logoutBtn').style.display = 'none';
+    }
+
+    function switchToRegister() {
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('registerForm').classList.remove('hidden');
+    }
+
+    function switchToLogin() {
+      document.getElementById('loginForm').classList.remove('hidden');
+      document.getElementById('registerForm').classList.add('hidden');
+    }
+
+    async function register() {
+      const username = document.getElementById('regUsername').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value.trim();
+      const messageDiv = document.getElementById('regMessage');
+
+      console.log('注册请求:', { username, email, password: '***' });
+
+      if (!username || !email || !password) {
+        messageDiv.innerHTML = '<div class="message error">所有字段都是必需的</div>';
+        return;
+      }
+
+      if (password.length < 6) {
+        messageDiv.innerHTML = '<div class="message error">密码必须至少6个字符</div>';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password })
+        });
+
+        const result = await response.json();
+        console.log('注册结果:', result);
+
+        if (result.success) {
+          messageDiv.innerHTML = '<div class="message success">✅ 注册成功！请登录</div>';
+          setTimeout(() => {
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regPassword').value = '';
+            switchToLogin();
+          }, 1500);
+        } else {
+          messageDiv.innerHTML = `<div class="message error">❌ ${result.message}</div>`;
+        }
+      } catch (err) {
+        console.error('注册错误:', err);
+        messageDiv.innerHTML = `<div class="message error">❌ 注册失败：${err.message}</div>`;
+      }
+    }
+
+    async function login() {
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      const messageDiv = document.getElementById('loginMessage');
+
+      console.log('登录请求:', { username, password: '***' });
+
+      if (!username || !password) {
+        messageDiv.innerHTML = '<div class="message error">用户名和密码不能为空</div>';
+        return;
+      }
+
+      messageDiv.innerHTML = '<div class="message">⏳ 正在验证...</div>';
+
+      try {
+        console.log('发送请求到 /api/login');
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        console.log('响应状态:', response.status);
+        const result = await response.json();
+        console.log('登录结果:', result);
+
+        if (result.success) {
+          console.log('登录成功！');
+          console.log('userId:', result.userId);
+          console.log('username:', result.username);
+
+          // 保存用户信息到 localStorage
+          const userData = {
+            id: result.userId,
+            username: result.username
+          };
+
+          localStorage.setItem('currentUser', JSON.stringify(userData));
+          console.log('用户信息已保存:', userData);
+
+          messageDiv.innerHTML = '<div class="message success">✅ 登录成功！正在加载...</div>';
+          setTimeout(() => {
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            checkLogin();
+          }, 500);
+        } else {
+          console.log('登录失败:', result.message);
+          messageDiv.innerHTML = `<div class="message error">❌ ${result.message || '登录失败'}</div>`;
+        }
+      } catch (err) {
+        console.error('登录错误:', err);
+        messageDiv.innerHTML = `<div class="message error">❌ 错误: ${err.message}</div>`;
+      }
+    }
+
+    function logout() {
+      console.log('用户退出登录');
+      localStorage.removeItem('currentUser');
+      document.getElementById('loginUsername').value = '';
+      document.getElementById('loginPassword').value = '';
+      showLogin();
+    }
+
+    function displayProducts() {
+      const productList = document.getElementById('productList');
+      productList.innerHTML = products.map(product => `
+        <div class="product-card">
+          <div class="product-name">${product.name}</div>
+          <div class="product-price">¥${product.price.toFixed(2)}</div>
+          <button onclick="addToCart(${product.id}, '${product.name}', ${product.price})">加入购物车</button>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(id, name, price) {
+      const currentUser = localStorage.getItem('currentUser');
+      if (!currentUser) {
+        alert('请先登录');
+        return;
+      }
+
+      let cart = JSON.parse(localStorage.getItem('cart')) || [];
+      const existingItem = cart.find(item => item.id === id);
+
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        cart.push({ id, name, price, quantity: 1 });
+      }
+
+      localStorage.setItem('cart', JSON.stringify(cart));
+      alert(`✅ 已添加到购物车：${name}`);
+    }
+
+    // 退出登录按钮
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+  </script>
 </body>
 </html>

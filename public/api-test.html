@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>API 测试工具</title>
+  <style>
+    body { font-family: Arial; margin: 20px; background: #f5f5f5; }
+    .box { background: white; padding: 15px; margin: 10px 0; border-radius: 4px; }
+    input, textarea { width: 100%; padding: 8px; margin: 5px 0; box-sizing: border-box; }
+    button { padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px 0; }
+    button:hover { background: #2980b9; }
+    pre { background: #2c3e50; color: #ecf0f1; padding: 10px; border-radius: 4px; overflow-x: auto; max-height: 300px; overflow-y: auto; }
+    .success { color: #27ae60; }
+    .error { color: #e74c3c; }
+  </style>
+</head>
+<body>
+  <h1>🔧 API 测试工具</h1>
+
+  <div class="box">
+    <h2>1. 测试注册</h2>
+    <input type="text" id="regUsername" placeholder="用户名">
+    <input type="email" id="regEmail" placeholder="邮箱">
+    <input type="password" id="regPassword" placeholder="密码">
+    <button onclick="testRegister()">测试注册</button>
+    <pre id="regResult"></pre>
+  </div>
+
+  <div class="box">
+    <h2>2. 测试登录</h2>
+    <input type="text" id="loginUsername" placeholder="用户名或邮箱">
+    <input type="password" id="loginPassword" placeholder="密码">
+    <button onclick="testLogin()">测试登录</button>
+    <pre id="loginResult"></pre>
+  </div>
+
+  <script>
+    async function testRegister() {
+      const username = document.getElementById('regUsername').value;
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+      const result = document.getElementById('regResult');
+
+      if (!username || !email || !password) {
+        result.innerHTML = '<span class="error">❌ 所有字段都不能为空</span>';
+        return;
+      }
+
+      result.innerHTML = '🔄 发送请求中...';
+
+      try {
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          result.innerHTML = `<span class="success">✅ 注册成功！</span>\n\n${JSON.stringify(data, null, 2)}`;
+        } else {
+          result.innerHTML = `<span class="error">❌ 注册失败</span>\n\n${JSON.stringify(data, null, 2)}`;
+        }
+      } catch (err) {
+        result.innerHTML = `<span class="error">❌ 错误：${err.message}</span>`;
+      }
+    }
+
+    async function testLogin() {
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
+      const result = document.getElementById('loginResult');
+
+      if (!username || !password) {
+        result.innerHTML = '<span class="error">❌ 用户名和密码不能为空</span>';
+        return;
+      }
+
+      result.innerHTML = '🔄 发送请求中...';
+
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          result.innerHTML = `<span class="success">✅ 登录成功！</span>\n\n${JSON.stringify(data, null, 2)}`;
+        } else {
+          result.innerHTML = `<span class="error">❌ 登录失败</span>\n\n${JSON.stringify(data, null, 2)}`;
+        }
+      } catch (err) {
+        result.innerHTML = `<span class="error">❌ 错误：${err.message}</span>`;
+      }
+    }
+  </script>
+</body>
+</html>
