@@ -1,108 +1,182 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
-const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
 
 // 中间件
 app.use(express.json());
-app.use(cors());
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://doreshop:Dore%40Shop123@cluster0.gfe4at4.mongodb.net/?retryWrites=true&w=majority';
+// MongoDB 连接
+const mongoUri = process.env.MONGO_URI || 'mongodb+srv://doreshop:Dore%40Shop123@cluster0.gfe4at4.mongodb.net/?retryWrites=true&w=majority';
 
 console.log('正在连接 MongoDB...');
+mongoose.connect(mongoUri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    console.log('✓ MongoDB 连接成功');
+}).catch(err => {
+    console.error('✗ MongoDB 连接失败:', err.message);
+});
 
-// 连接 MongoDB
-mongoose.connect(MONGO_URI)
-    .then(() => {
-        console.log('✅ MongoDB 已连接');
-    })
-    .catch((err) => {
-        console.error('❌ MongoDB 连接失败:', err.message);
-        console.log('继续运行（使用本地存储）...');
-    });
-
-// 定义数据模型
+// 用户数据模型
 const userSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true },
+    username: { type: String, unique: true, required: true },
+    email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     createdAt: { type: Date, default: Date.now }
 });
 
 const User = mongoose.model('User', userSchema);
 
-// 路由
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../public/index.html'));
+// 订单数据模型
+const orderSchema = new mongoose.Schema({
+    userId: { type: String, required: true },
+    username: { type: String, required: true },
+    items: [
+        {
+            id: Number,
+            name: String,
+            price: Number,
+            quantity: Number
+        }
+    ],
+    totalAmount: { type: Number, required: true },
+    status: { type: String, default: '待处理' },
+    orderDate: { type: Date, default: Date.now }
 });
 
-// API: 用户注册
+const Order = mongoose.model('Order', orderSchema);
+
+// API 路由
+
+// 注册
 app.post('/api/register', async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
-        console.log('注册请求:', { username, email });
-
-        // 检查用户是否已存在
-        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
-        if (existingUser) {
-            return res.status(400).json({ error: '用户已存在' });
+        if (username.length < 3) {
+            return res.json({ success: false, message: '用户名至少3个字符' });
+        }
+        if (password.length < 6) {
+            return res.json({ success: false, message: '密码至少6个字符' });
         }
 
-        // 创建新用户
+        const existingUser = await User.findOne({
+            $or: [{ username }, { email }]
+        });
+
+        if (existingUser) {
+            if (existingUser.username === username) {
+                return res.json({ success: false, message: '用户名已存在' });
+            }
+            return res.json({ success: false, message: '邮箱已被注册' });
+        }
+
         const newUser = new User({ username, email, password });
         await newUser.save();
 
-        console.log('✅ 用户已注册:', username);
         res.json({ success: true, message: '注册成功' });
-    } catch (err) {
-        console.error('❌ 注册错误:', err.message);
-        res.status(500).json({ error: '注册失败' });
+    } catch (error) {
+        console.error('Register error:', error);
+        res.json({ success: false, message: '注册失败' });
     }
 });
 
-// API: 用户登录
+// 登录
 app.post('/api/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { username, password } = req.body;
 
-        console.log('登录请求:', email);
-
-        // 查找用户
         const user = await User.findOne({
-            $or: [{ email }, { username: email }],
-            password: password
+            $or: [{ username }, { email: username }]
         });
 
-        if (!user) {
-            return res.status(401).json({ error: '邮箱/用户名或密码错误' });
+        if (!user || user.password !== password) {
+            return res.json({ success: false, message: '用户名或密码错误' });
         }
 
-        console.log('✅ 用户已登录:', user.username);
         res.json({
             success: true,
-            user: {
-                username: user.username,
-                email: user.email
-            }
+            message: '登录成功',
+            userId: user._id.toString(),
+            username: user.username
         });
-    } catch (err) {
-        console.error('❌ 登录错误:', err.message);
-        res.status(500).json({ error: '登录失败' });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.json({ success: false, message: '登录失败' });
     }
 });
 
-// API: 测试
-app.get('/api/test', (req, res) => {
-    res.json({ message: '服务器正常运行' });
+// 创建订单
+app.post('/api/orders', async (req, res) => {
+    try {
+        const { userId, username, items, totalAmount } = req.body;
+
+        if (!userId || !items || items.length === 0) {
+            return res.json({ success: false, message: '订单信息不完整' });
+        }
+
+        const order = new Order({
+            userId,
+            username,
+            items,
+            totalAmount,
+            status: '待处理'
+        });
+
+        await order.save();
+        res.json({ success: true, message: '订单创建成功', orderId: order._id });
+    } catch (error) {
+        console.error('Order creation error:', error);
+        res.json({ success: false, message: '创建订单失败' });
+    }
+});
+
+// 获取用户订单
+app.get('/api/orders/:userId', async (req, res) => {
+    try {
+        const orders = await Order.find({ userId: req.params.userId });
+        res.json(orders);
+    } catch (error) {
+        console.error('Get orders error:', error);
+        res.json([]);
+    }
+});
+
+// 获取所有订单（管理员）
+app.get('/api/admin/orders', async (req, res) => {
+    try {
+        const orders = await Order.find();
+        res.json(orders);
+    } catch (error) {
+        console.error('Get all orders error:', error);
+        res.json([]);
+    }
+});
+
+// 更新订单状态（管理员）
+app.put('/api/admin/orders/:orderId', async (req, res) => {
+    try {
+        const { status } = req.body;
+        const order = await Order.findByIdAndUpdate(req.params.orderId, { status }, { new: true });
+        res.json({ success: true, order });
+    } catch (error) {
+        console.error('Update order error:', error);
+        res.json({ success: false, message: '更新失败' });
+    }
+});
+
+// 主页路由
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // 启动服务器
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`✅ 服务器运行在 http://localhost:${PORT}`);
+    console.log(`✓ 服务器运行在 http://localhost:${PORT}`);
 });
